@@ -13,6 +13,21 @@ export default async function ResultsPage() {
     redirect("/login");
   }
 
+  type SubmissionWithExam = {
+    id: string;
+    status: string;
+    score: number | null;
+    points_earned: number | null;
+    points_possible: number | null;
+    submitted_at: string | null;
+    graded_at: string | null;
+    feedback: string | null;
+    exams: {
+      title: string;
+      courses: { code: string; name: string } | null;
+    } | null;
+  };
+
   const { data: submissions } = await supabase
     .from("exam_submissions")
     .select(`
@@ -34,7 +49,7 @@ export default async function ResultsPage() {
     `)
     .eq("student_id", user.id)
     .in("status", ["submitted", "graded"])
-    .order("submitted_at", { ascending: false });
+    .order("submitted_at", { ascending: false }) as { data: SubmissionWithExam[] | null };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -66,10 +81,7 @@ export default async function ResultsPage() {
         {submissions && submissions.length > 0 ? (
           <div className="space-y-4">
             {submissions.map((submission) => {
-              const exam = submission.exams as {
-                title: string;
-                courses: { code: string; name: string } | null;
-              } | null;
+              const exam = submission.exams;
 
               return (
                 <div key={submission.id} className="bg-white p-6 rounded-lg shadow">

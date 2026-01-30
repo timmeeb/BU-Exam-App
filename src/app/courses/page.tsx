@@ -13,6 +13,18 @@ export default async function CoursesPage() {
     redirect("/login");
   }
 
+  type EnrollmentWithCourse = {
+    id: string;
+    enrolled_at: string;
+    courses: {
+      id: string;
+      code: string;
+      name: string;
+      description: string | null;
+      semester: string;
+    } | null;
+  };
+
   const { data: enrollments } = await supabase
     .from("course_enrollments")
     .select(`
@@ -26,7 +38,7 @@ export default async function CoursesPage() {
         semester
       )
     `)
-    .eq("student_id", user.id);
+    .eq("student_id", user.id) as { data: EnrollmentWithCourse[] | null };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,14 +70,7 @@ export default async function CoursesPage() {
         {enrollments && enrollments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {enrollments.map((enrollment) => {
-              const course = enrollment.courses as {
-                id: string;
-                code: string;
-                name: string;
-                description: string | null;
-                semester: string;
-              } | null;
-
+              const course = enrollment.courses;
               if (!course) return null;
 
               return (

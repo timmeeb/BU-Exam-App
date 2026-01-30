@@ -13,11 +13,23 @@ export default async function ExamsPage() {
     redirect("/login");
   }
 
+  type Enrollment = { course_id: string };
+  type ExamWithCourse = {
+    id: string;
+    title: string;
+    description: string | null;
+    status: string;
+    duration_minutes: number | null;
+    start_time: string | null;
+    end_time: string | null;
+    courses: { code: string; name: string } | null;
+  };
+
   // Get enrolled course IDs
   const { data: enrollments } = await supabase
     .from("course_enrollments")
     .select("course_id")
-    .eq("student_id", user.id);
+    .eq("student_id", user.id) as { data: Enrollment[] | null };
 
   const courseIds = enrollments?.map((e) => e.course_id) || [];
 
@@ -40,8 +52,8 @@ export default async function ExamsPage() {
         `)
         .in("course_id", courseIds)
         .in("status", ["published", "active", "completed"])
-        .order("start_time", { ascending: true })
-    : { data: [] };
+        .order("start_time", { ascending: true }) as { data: ExamWithCourse[] | null }
+    : { data: [] as ExamWithCourse[] };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,7 +85,7 @@ export default async function ExamsPage() {
         {exams && exams.length > 0 ? (
           <div className="space-y-4">
             {exams.map((exam) => {
-              const course = exam.courses as { code: string; name: string } | null;
+              const course = exam.courses;
               const statusColors: Record<string, string> = {
                 published: "bg-blue-100 text-blue-800",
                 active: "bg-green-100 text-green-800",
